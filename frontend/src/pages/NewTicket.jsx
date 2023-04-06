@@ -9,7 +9,7 @@ import BackButton from '../components/BackButton'
 function NewTicket() {
   const { user } = useSelector((state) => state.auth)
   const { isLoading, isError, isSuccess, message } = useSelector(
-    (state) => state.ticket
+    (state) => state.tickets
   )
   const [name] = useState(user.name)
   const [email] = useState(user.email)
@@ -19,21 +19,16 @@ function NewTicket() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    if (isError) {
-      toast.error(message)
-    }
-
-    if (isSuccess) {
-      dispatch(reset())
-      navigate('/tickets')
-    }
-    dispatch(reset())
-  }, [dispatch, isError, isSuccess, navigate, message])
-
   const onSubmit = (e) => {
     e.preventDefault()
     dispatch(createTicket({ product, description }))
+      .unwrap()
+      .then(() => {
+        // We got a good response so navigate the user
+        navigate('/tickets')
+        toast.success('New ticket created!')
+      })
+      .catch(toast.error)
   }
 
   if (isLoading) {
