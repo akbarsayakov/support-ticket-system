@@ -18,22 +18,7 @@ function Login() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const { user, isLoading, isSuccess, isError, message } = useSelector(
-    (state) => state.auth
-  )
-
-  useEffect(() => {
-    if (isError) {
-      toast.error(message)
-    }
-
-    // Redirect when logged in
-    if (isSuccess || user) {
-      navigate('/')
-    }
-
-    dispatch(reset())
-  }, [isError, isSuccess, user, message, navigate, dispatch])
+  const { isLoading } = useSelector((state) => state.auth)
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -51,6 +36,12 @@ function Login() {
     }
 
     dispatch(login(userData))
+      .unwrap()
+      .then((user) => {
+        toast.success(`Logged in as ${user.name}`)
+        navigate('/')
+      })
+      .catch(toast.error)
   }
 
   if (isLoading) {

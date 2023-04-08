@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { getTicket, closeTicket } from '../features/tickets/ticketSlice'
-import { getNotes } from '../features/notes/noteSlice'
+import { getNotes, createNote } from '../features/notes/noteSlice'
 import { useParams, useNavigate } from 'react-router-dom'
 import { FaPlus } from 'react-icons/fa'
 import { toast } from 'react-toastify'
@@ -29,24 +29,18 @@ function Ticket() {
   const [modalIsOpen, setModalIsOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
 
-  const { ticket, isError, message } = useSelector((state) => state.tickets)
+  const { ticket } = useSelector((state) => state.tickets)
 
   const { notes } = useSelector((state) => state.notes)
 
-  const params = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { ticketId } = useParams()
 
   useEffect(() => {
-    if (isError) {
-      toast.error(message)
-    }
-
-    dispatch(getTicket(ticketId))
-    dispatch(getNotes(ticketId))
-    // eslint-disable-next-line
-  }, [isError, message, ticketId])
+    dispatch(getTicket(ticketId)).unwrap().catch(toast.error)
+    dispatch(getNotes(ticketId)).unwrap().catch(toast.error)
+  }, [ticketId, dispatch])
 
   // Close ticket
   const onTicketClose = () => {
@@ -58,8 +52,13 @@ function Ticket() {
   // Create note submit
   const onNoteSubmit = (e) => {
     e.preventDefault()
-    console.log('Submit')
-    closeModal()
+    dispatch(createNote({ noteText, ticketId }))
+      .unwrap()
+      .then(() => {
+        setNoteText('')
+        closeModal()
+      })
+      .catch(toast.error)
   }
 
   // Open/close modal
@@ -70,9 +69,6 @@ function Ticket() {
     return <Spinner />
   }
 
-  if (isError) {
-    return <h3>Something went wrong</h3>
-  }
   return (
     <div className='ticket-page'>
       <header className='ticket-header'>
